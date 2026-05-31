@@ -183,7 +183,7 @@ output_csv_path：實驗數據輸出的 CSV 檔案路徑。
 本專案提供 Python 腳本，能夠讀取多個實驗生成的 CSV 檔案進行數據合併與平均計算，並支援玩家群組融合功能，分在同一組的將會把數據取平均後再繪圖。
 
 指令格式 (Syntax)：
-python3 plot_average_results.py src/plot_average_results.py  [csv2 ...] [--groups <num_groups>   ...] <output_base_name>
+python3 src/plot_average_results.py  [csv2 ...] [--groups <num_groups>   ...] <output_base_name>
 
 使用範例 A（一般繪圖，直接平均所有對局並繪製各項指標圖表）：
 python3 src/plot_average_results.py out/run1.csv out/run2.csv out/run3.csv charts/avg_out
