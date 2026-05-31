@@ -163,7 +163,7 @@ make
 
 指令格式:
 
-./mahjong_game <mode> <AI_0> <AI_1> <AI_2> <AI_3> <total_count> <output_csv_path>
+./mahjong_game [mode] [AI_0] [AI_1] [AI_2] [AI_3] [total_count] [output_csv_path]
 
 參數說明:
 
@@ -187,7 +187,7 @@ output_csv_path:實驗數據輸出的 CSV 檔案路徑。
 
 指令格式:
 
-python3 src/plot_average_results.py  [csv2 ...] [--groups <num_groups>   ...] <output_base_name>
+python src/plot_average_results.py [csv1] [csv2 ...] [--groups num_groups g1 g2 ...] [output_base_name]
 
 使用範例 A（一般繪圖，直接平均所有對局並繪製各項指標圖表):
 python3 src/plot_average_results.py out/run1.csv out/run2.csv out/run3.csv charts/avg_out
