@@ -1,0 +1,5 @@
+Player,AIName,AvgScore,AvgPt,WinRate,DealIn,AvgTurn,AvgRank,First,Second,Third,Fourth,Tobi,Mode
+0,speed,28556.2,27.3362,37.8649,12.5298,48.5486,2.039,854,515,330,301,3,match
+1,defense,25342,5.10705,16.0381,11.1765,45.1242,2.4795,442,555,605,398,2,match
+2,highscore,23883.8,-9.37365,18.0053,20.8996,49.9144,2.665,413,469,493,625,7,match
+3,shanten,22083.5,-18.204,13.7451,20.7994,48.8396,2.8165,291,461,572,676,15,match

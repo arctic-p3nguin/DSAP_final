@@ -1,0 +1,5 @@
+Player,AIName,AvgScore,AvgPt,WinRate,DealIn,AvgTurn,AvgRank,First,Second,Third,Fourth,Tobi,Mode
+0,speed,0,4134.75,59.16,0.04,52.4868,0,0,0,0,0,0,round
+1,random,0,1300,0.04,20.32,51,0,0,0,0,0,0,round
+2,random,0,3200,0.04,12.84,29,0,0,0,0,0,0,round
+3,random,0,3633.33,0.24,13.32,36.8333,0,0,0,0,0,0,round

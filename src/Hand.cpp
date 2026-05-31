@@ -10,14 +10,21 @@ void Hand::sortHand() {
     sort(concealedTiles.begin(), concealedTiles.end());
 }
 
+void Hand::clear() {
+    concealedTiles.clear();
+    exposedMelds.clear();
+}
+
 Tile Hand::discardTile(int type, int val, int id) {
     for (auto it = concealedTiles.begin(); it != concealedTiles.end(); ++it) {
-        if (it->getType() == type && it->getValue() == val && it->getId() == id) {
+        if (it->getType() == type && it->getValue() == val && (id == -1 || it->getId() == id)) {
             Tile discarded = *it;
             concealedTiles.erase(it);
             return discarded;
         }
     }
+
+    return Tile(-1, -1, -1, false);
 }
 
 void Hand::addMeld(Meld m) {
