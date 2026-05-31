@@ -147,7 +147,7 @@ $$
 C++ 編譯環境：支援 C++17 或以上標準的編譯器（如 g++ 於 WSL/Linux 環境）。
 Python 環境：Python 3.8+，並需安裝數據分析套件。安裝指令如下：
 
-pip install pandas matplotlib
+`pip install pandas matplotlib`
 
 2. 編譯 C++ 模擬器
 
