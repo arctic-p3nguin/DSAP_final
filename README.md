@@ -140,5 +140,54 @@ $$
 ### 使用方式
 <!-- 如何編譯、執行、使用你的程式 -->
 
-### 與課程的關聯總結
-<!-- 總結你的專題與進階程式設計及資料結構課程之間的關聯 -->
+本專案是一個基於 C++ 開發的日本麻將 AI 自動化對局模擬與策略評估系統，並結合 Python (Pandas & Matplotlib) 進行實驗數據的統計與動態圖表生成。以下說明如何建立編譯環境、執行模擬。
+
+1. 環境需求
+
+C++ 編譯環境：支援 C++17 或以上標準的編譯器（如 g++ 於 WSL/Linux 環境）。
+Python 環境：Python 3.8+，並需安裝數據分析套件。安裝指令如下：
+
+pip install pandas matplotlib
+
+2. 編譯 C++ 模擬器 (Compilation)
+
+本專案支援使用 Makefile 進行快速編譯。於專案src目錄下直接輸入 make 指令即可自動完成編譯。
+
+make
+
+3. 執行AI模擬對局
+
+編譯完成後，可透過命令列參數自訂模擬模式、玩家陣容以及對局數量。
+
+指令格式 (Syntax)：
+./mahjong_game <mode> <AI_0> <AI_1> <AI_2> <AI_3> <total_count> <output_csv_path>
+
+參數說明：
+
+mode：可選擇 round (單局）或 match（整場）。
+
+AI_0 到 AI_3：指定四位玩家的 AI 策略類型。可選參數包含 shanten（向聽型）、speed（速度型）、defense（防守型）、highscore（胡大牌型）、random（隨機亂打型）。
+
+total_count：模擬的總局數或總場數。
+
+output_csv_path：實驗數據輸出的 CSV 檔案路徑。
+
+使用範例 A（單局模式基準測試，1 個向聽 AI 對抗 3 個隨機 AI，跑 1000 局）：
+./mahjong_game round shanten random random random 1000 out/base_verify.csv
+
+使用範例 B（完整整場對局測試，四個AI對抗，跑 500 場完整比賽）：
+./mahjong_game match defense speed highscore shanten 500 out/match_results.csv
+
+數據視覺化繪圖 (Data Visualization)
+
+本專案提供 Python 腳本，能夠讀取多個實驗生成的 CSV 檔案進行數據合併與平均計算，並支援玩家群組融合功能，分在同一組的將會把數據取平均後再繪圖。
+
+指令格式 (Syntax)：
+python3 plot_average_results.py src/plot_average_results.py  [csv2 ...] [--groups <num_groups>   ...] <output_base_name>
+
+使用範例 A（一般繪圖，直接平均所有對局並繪製各項指標圖表）：
+python3 src/plot_average_results.py out/run1.csv out/run2.csv out/run3.csv charts/avg_out
+
+使用範例 B（分組繪圖，將 Player 2 與 Player 3 的隨機玩家融合成 Group 平均，專注分析 Player 0 與 1）：
+python3 src/plot_average_results.py out/run1.csv out/run2.csv out/run3.csv --groups 3 0 1 2,3 charts/grouped_out
+
