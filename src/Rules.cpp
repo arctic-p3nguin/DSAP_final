@@ -1,100 +1,95 @@
 # include <vector>
 # include "Rules.hpp"
+# include "ShantenCounter.hpp"
 
-// 之後改 isWin判定可以改成向聽數=-1就好 
-// prototype交完之後要新增役種判定和分數計算(用在進階邏輯)
 using namespace std;
 
-bool Rules::isWin(const vector<Tile>& concealedTiles) {
-    int count[TILE_COUNT] = {0};
-    for(Tile tile: concealedTiles) {
-        int index = tile.getType() * 9 + tile.getValue();
-        count[index]++;
-    }
 
-    bool result = false;
-    // 先檢查七對子和國士
-    result = checkSevenPairs(count);
-    if(!result) result = checkThirteenOneNine(count);
+// 檢查是否有合法的吃牌組合，並回傳所有可能從手牌拿出來的2張牌組合
+vector<vector<Tile>> Rules::getChiCombinations(const vector<Tile>& concealedTiles, const Tile& discardedTile) {
+    vector<vector<Tile>> validCombos;
+    
+    // 字牌不能吃
+    if (discardedTile.getType() == 3) return validCombos;
 
-    if(!result){
-        for(int i = 0; i < TILE_COUNT; i++) {
-            if(count[i] >= 2){
-                count[i] -= 2;
-                result = checkWinning(count);
-                count[i] += 2;
+    int t = discardedTile.getType();
+    int v = discardedTile.getValue();
+
+    // 三種可能的組合
+    int targets[3][2] = {
+        {v-2, v-1},
+        {v-1, v+1},
+        {v+1, v+2}
+    };
+
+    for(int i = 0; i < 3; i++) {
+        int v1 = targets[i][0];
+        int v2 = targets[i][1];
+
+
+        // 檢查手牌
+        bool found1 = false, found2 = false;
+        Tile match1(0, 0, 0, 0), match2(0, 0, 0, 0);
+
+        for (const Tile& tile : concealedTiles) {
+            if(tile.getType() == t) {
+                if(!found1 && tile.getValue() == v1) {
+                    match1 = tile;
+                    found1 = true;
+                } 
+                else if(!found2 && tile.getValue() == v2) {
+                    match2 = tile;
+                    found2 = true;
+                }
             }
-            if(result) break;
+        }
+
+        // 如果手牌同時擁有這兩張牌就可以吃
+        if(found1 && found2) {
+            validCombos.push_back({match1, match2});
         }
     }
-    return result;
+
+    return validCombos;
 }
 
-bool Rules::checkWinning(int count[]) {
-    int first = -1;
-    for(int i = 0; i < TILE_COUNT; i++) {
-        if(count[i] > 0) {
-            first = i;
-            break;
+bool Rules::isWin(const vector<Tile>& concealedTiles, const vector<Meld>& exposedMelds) {
+    ShantenCounter sc;
+    ParsedStructure dummyStructure;
+    int sh = sc.calculate(concealedTiles, exposedMelds, dummyStructure);
+    if(sh == -1) return true;
+    else return false;
+}
+
+vector<Tile> Rules::getWaitingTiles(vector<Tile> concealedTiles, const vector<Meld>& exposedMelds) {
+    // 把所有牌都試過一次，然後看哪幾張牌能讓向聽數變成-1
+    vector<Tile> waitingTiles;
+    ShantenCounter sc;
+    ParsedStructure dummyStructure;
+
+    for(int type = 0; type < 4; type++) {
+        for(int value = 0; value < 9; value++) {
+            if(type == 3 && value > 6) break;
+
+            Tile tile(type, value, -1, false);
+            concealedTiles.push_back(tile);
+            int newSh = sc.calculate(concealedTiles, exposedMelds, dummyStructure);
+            if(newSh == -1) {
+                waitingTiles.push_back(tile);
+            }
+            concealedTiles.pop_back();
         }
     }
+    return waitingTiles;
+}
 
-    // Base case
-    if(first == -1) return true;
-
-    // 刻子
-    if(count[first] >= 3) {
-        count[first] -= 3;
-        if(checkWinning(count)) return true;
-        count[first] += 3; 
-    }
-
-    // 順子
-    if(first < 27 && (first % 9) <= 6) {
-        if(count[first] > 0 && count[first+1] > 0 && count[first+2] > 0) {
-            count[first]--;
-            count[first+1]--;
-            count[first+2]--;
-            if(checkWinning(count)) return true;
-            count[first]++; 
-            count[first+1]++;
-            count[first+2]++;
+// 檢查有沒有振聽(看河面)
+bool Rules::checkFuriten(const vector<Tile>& waitingTiles, const bool* isDiscarded) {
+    for(const Tile& w : waitingTiles) {
+        int index = w.getType() * 9 + w.getValue();
+        if (index >= 0 && index < 34 && isDiscarded[index]) {
+            return true; 
         }
     }
-
     return false;
-}
-
-bool Rules::checkSevenPairs(int count[]) {
-    int cnt = 0;
-    for(int i = 0; i < TILE_COUNT; i++) {
-        if(count[i] != 0 && count[i] != 2){
-            break;
-        }
-        if(count[i] == 2){
-            cnt++;
-        }
-    }
-
-    if(cnt == 7) return true;
-    else return false;
-}
-
-bool Rules::checkThirteenOneNine(int count[]) {
-    vector<int> temp(5, 0);
-    temp[count[0]]++;
-    temp[count[8]]++;
-    temp[count[9]]++;
-    temp[count[17]]++;
-    temp[count[18]]++;
-    temp[count[26]]++;
-    temp[count[27]]++;
-    temp[count[28]]++;
-    temp[count[29]]++;
-    temp[count[30]]++;
-    temp[count[31]]++;
-    temp[count[32]]++;
-    temp[count[33]]++;
-    if(temp[1] == 13 && temp[2] == 1) return true;
-    else return false;
 }

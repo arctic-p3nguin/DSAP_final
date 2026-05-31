@@ -2,30 +2,94 @@
 #define GAMEMANAGER_HPP
 
 #include <vector>
-#include <string>
-#include <algorithm>
 #include <random>
 #include "Player.hpp"
 #include "Tile.hpp"
 #include "Rules.hpp"
+#include "ScoreCounter.hpp"
 
 class GameManager {
 private:
-    std::vector<Tile> deck;          // 牌堆 (136張)
-    std::vector<Player*> players;      // 四位玩家
-    int currentTurn;                 // 當前手番 (0-3)
-    Rules rules;                     // 規則判定
+    std::vector<Player*> players;
+    std::vector<Tile> deck;
+    int currentTurn;
+    bool skipDrawOnce;
+    Rules rules;
+    DoraSystem doraSys;
 
-    void initDeck();                 // 產生 136 張牌
-    void shuffleDeck();              // 洗牌
-    void dealTiles();         // 開局發牌
+    int winnerIndex;
+    int loserIndex;
+    int winningScore;
+    ScoreResult winningResult;
+
+    int matchMode;
+    int totalMatches;
+
+    int oyaIndex;
+    int kyoku;
+    int honba;
+    int riichiPool;
+
+    // ===== 新增統計資料 =====
+    int roundCount;
+    int roundStepCount;
+    int winningTurn;
+
+    int winCounts[4];
+    int dealInCounts[4];
+    long long totalWinPoints[4];
+    long long totalWinHans[4];
+    long long totalWinTurns[4];
 
 public:
     GameManager();
-    void startGame();                // 初始化並開始遊戲
-    bool nextStep();                 // 執行摸切 (回傳 false 代表遊戲結束)
-    void printGameState() const;     // 驗證用
-    bool isDeckEmpty() const { return deck.empty(); }
+
+    void clearPlayers();
+    void addPlayer(Player* p);
+    int getPlayerScore(int idx) const;
+    void setOyaIndex(int idx) { oyaIndex = idx; }
+
+    void initGameConfiguration(int mode, int totalGames);
+    void runFullMatch();
+    void resetRound();
+    void roundEndSettlement();
+
+    void initDeck();
+    void shuffleDeck();
+    void dealTiles();
+    void startGame();
+    bool nextStep();
+    void printGameState() const;
+
+    void setWinnerLoser(int win, int lose) {
+        winnerIndex = win;
+        loserIndex = lose;
+    }
+    int getWinnerIndex() const { return winnerIndex; }
+    int getLoserIndex() const { return loserIndex; }
+
+    void setWinningScore(int score) {
+        winningScore = score;
+        winningResult.totalScore = score;
+    }
+    int getWinningScore() const { return winningScore; }
+
+    void setWinningResult(const ScoreResult& res) {
+        winningResult = res;
+        winningScore = res.totalScore;
+    }
+    const ScoreResult& getWinningResult() const { return winningResult; }
+
+    void setWinningTurn(int turn) { winningTurn = turn; }
+    int getWinningTurn() const { return winningTurn; }
+
+    // ===== 統計 getter =====
+    int getRoundCount() const { return roundCount; }
+    int getWinCount(int idx) const { return (idx >= 0 && idx < 4) ? winCounts[idx] : 0; }
+    int getDealInCount(int idx) const { return (idx >= 0 && idx < 4) ? dealInCounts[idx] : 0; }
+    long long getTotalWinPoints(int idx) const { return (idx >= 0 && idx < 4) ? totalWinPoints[idx] : 0; }
+    long long getTotalWinHan(int idx) const { return (idx >= 0 && idx < 4) ? totalWinHans[idx] : 0; }
+    long long getTotalWinTurns(int idx) const { return (idx >= 0 && idx < 4) ? totalWinTurns[idx] : 0; }
 };
 
-#endif
+#endif // GAMEMANAGER_HPP

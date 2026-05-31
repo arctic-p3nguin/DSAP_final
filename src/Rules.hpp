@@ -3,19 +3,20 @@
 
 #include <vector>
 #include "Tile.hpp"
+#include "Hand.hpp"
 
 using namespace std;
 
+
 class Rules {
 public:
-    bool isWin(const vector<Tile>& concealedTiles);
+    vector<vector<Tile>> getChiCombinations(const vector<Tile>& concealedTiles, const Tile& discardedTile);
+    bool isWin(const vector<Tile>& concealedTiles, const vector<Meld>& exposedMelds);
+    vector<Tile> getWaitingTiles(vector<Tile> concealedTiles, const vector<Meld>& exposedMelds);
+    bool checkFuriten(const vector<Tile>& waitingTiles, const bool* isDiscarded);
 
 private:
-    // 一般的和
-    bool checkWinning(int count[]);
-    // 特殊和
-    bool checkSevenPairs(int count[]);
-    bool checkThirteenOneNine(int count[]);
+    
 };
 
 #endif

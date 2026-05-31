@@ -1,0 +1,5 @@
+Player,AIName,AvgScore,AvgPt,WinRate,DealIn,AvgTurn,AvgRank,First,Second,Third,Fourth,Tobi,Mode
+0,speed,0,4238.59,39.08,11.44,47.3214,0,0,0,0,0,0,round
+1,shanten,0,4534.91,15.24,19.4,49.0682,0,0,0,0,0,0,round
+2,shanten,0,4880.41,15.72,18.4,48.1374,0,0,0,0,0,0,round
+3,shanten,0,5062.97,13.72,16.4,48.07,0,0,0,0,0,0,round

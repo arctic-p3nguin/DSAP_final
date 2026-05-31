@@ -3,62 +3,154 @@
 
 #include <vector>
 #include <string>
-#include "Tile.hpp"
-#include "Hand.hpp"
 #include "ShantenCounter.hpp"
+#include "Rules.hpp"
+
+using namespace std;
+
+enum class CallType { None, Chi, Pon, Ankan, Minkan, Kakan };
+
+class ScoreCounter;
+
+struct DoraSystem {
+    vector<Tile> indicators;
+    vector<Tile> uraIndicators;
+    int activeCount = 1;
+
+    vector<Tile> getActiveIndicators() const {
+        return vector<Tile>(indicators.begin(), indicators.begin() + activeCount);
+    }
+
+    vector<Tile> getActiveUraIndicators() const {
+        return vector<Tile>(uraIndicators.begin(), uraIndicators.begin() + activeCount);
+    }
+
+    bool isActualDoraTile(const Tile& handTile, const Tile& indicator) const {
+        int targetValue = indicator.getValue() + 1;
+
+        if (indicator.getType() == 3) {
+            if (indicator.getValue() < 4) {
+                if (targetValue > 3) targetValue = 0;
+            } else {
+                if (targetValue > 6) targetValue = 4;
+            }
+        } else {
+            if (targetValue > 8) targetValue = 0;
+        }
+        return (handTile.getType() == indicator.getType() && handTile.getValue() == targetValue);
+    }
+};
 
 class Player {
 protected:
-    std::string name;
-    int seat;               // 0: 東, 1: 南, 2: 西, 3: 北
-    bool isDealer;          
-    Hand hand;              
-    std::vector<Tile> river; 
-    std::vector<Meld> melds; 
+    string name;
+    int seat;
+    bool isDealer;
+    Hand hand;
+    vector<Tile> river;
+    vector<Meld> melds;
     bool isRiichi;
+    const DoraSystem* doraSys = nullptr;
+    int score;
+    bool temporalFuriten = false;
+
+    bool isDiscarded[TILE_COUNT] = {false};
+    int remainingTileCounts[TILE_COUNT];
 
 public:
-    Player(std::string n, int s);
-    virtual ~Player() {} 
+    Player(string n, int s);
+    virtual ~Player() {}
 
-    // 共同狀態管理
     void setDealer(bool dealer) { isDealer = dealer; }
     bool getIsDealer() const { return isDealer; }
+    void setIsRiichi(bool state) { isRiichi = state; }
+    bool getIsRiichi() const { return isRiichi; }
     int getSeat() const { return seat; }
-    const std::vector<Tile>& getRiver() const { return river; }
+
+    int getScore() const { return score; }
+    void setScore(int s) { score = s; }
+
+    bool getTemporalFuriten() const { return temporalFuriten; }
+    void setTemporalFuriten(bool furiten) { temporalFuriten = furiten; }
+
+    const vector<Tile>& getRiver() const { return river; }
     const Hand& getHand() const { return hand; }
 
-    // 共同行為
-    void drawTile(const Tile& tile);      
-    Tile discardTile(const Tile& tile);   
-    
-    // polymorphism
-    virtual Tile decideDiscard() = 0;
+    void drawTile(const Tile& tile);
+    Tile discardTile(const Tile& tile);
+    void decreaseValidTile(int type, int value, int count);
+    vector<int> getActualRemainingTiles();
+    int calculateEffectiveTilesCount(const vector<Tile>& concealed, const vector<Meld>& melds);
 
-    void performChi(const std::vector<Tile>& combo, const Tile& discardedTile);
+    void setDoraSystem(const DoraSystem& ds) { doraSys = &ds; }
+
+    virtual Tile decideDiscard(const vector<Player*>& allPlayers) = 0;
+    virtual CallType decideCall(const Tile& discardedTile, bool canChi, bool canPon, bool canKan) {
+        return CallType::None;
+    }
+
+    void performChi(const vector<Tile>& combo, const Tile& discardedTile);
     void performPon(const Tile& discardedTile);
     void performKan(const Tile& discardedTile, MeldType kanType);
 
     void displayStatus() const;
+    const bool* getIsDiscarded() const;
+
+    int getWaitingTilesCount();
+    bool hasOtherYakuThanRiichi();
+
+    void resetRoundState();
 };
 
-// 沒邏輯的玩家 - 隨機丟牌
 class RandomPlayer : public Player {
 public:
-    RandomPlayer(std::string n, int s) : Player(n, s) {}
-    Tile decideDiscard() override; // 實作隨機丟牌
+    RandomPlayer(string n, int s) : Player(n, s) {}
+    Tile decideDiscard(const vector<Player*>& allPlayers) override;
 };
 
-// 出階邏輯 - 最小化向聽數
 class ShantenPlayer : public Player {
 private:
-    ShantenCounter sc; // 導入向聽數計算器
+    ShantenCounter sc;
 
 public:
-    ShantenPlayer(std::string n, int s) : Player(n, s) {}
+    ShantenPlayer(string n, int s) : Player(n, s) {}
+    Tile decideDiscard(const vector<Player*>& allPlayers) override;
+};
 
-    // 打牌決策
-    Tile decideDiscard() override;
+class SpeedPlayer : public Player {
+private:
+    ShantenCounter sc;
+    Rules rules;
+
+public:
+    SpeedPlayer(string n, int s) : Player(n, s) {}
+    int evaluateHandPotential(const vector<Tile>& concealed, const vector<Meld>& melds, const DoraSystem& doraSys);
+    virtual Tile decideDiscard(const vector<Player*>& allPlayers) override;
+    virtual CallType decideCall(const Tile& discardedTile, bool canChi, bool canPon, bool canMinkan) override;
+};
+
+class DefensePlayer : public Player {
+private:
+    ShantenCounter sc;
+    Rules rules;
+    int evaluateHandPotential(const vector<Tile>& concealed, const vector<Meld>& melds, const DoraSystem& doraSys);
+public:
+    DefensePlayer(string n, int s) : Player(n, s) {}
+    virtual Tile decideDiscard(const vector<Player*>& allPlayers) override;
+    virtual CallType decideCall(const Tile& discardedTile, bool canChi, bool canPon, bool canMinkan) override;
+};
+
+class HighScorePlayer : public Player {
+private:
+    Rules rules;
+    ShantenCounter sc;
+    int evaluateHighScorePotential(const vector<Tile>& concealed, const vector<Meld>& melds, const DoraSystem& doraSys, int shanten);
+
+public:
+    HighScorePlayer(string n, int s) : Player(n, s) {}
+
+    virtual Tile decideDiscard(const vector<Player*>& allPlayers) override;
+    virtual CallType decideCall(const Tile& discardedTile, bool canChi, bool canPon, bool canMinkan) override;
 };
 
 #endif
